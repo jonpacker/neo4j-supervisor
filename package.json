@@ -1,0 +1,19 @@
+{
+  "name": "neo4j-supervisor",
+  "version": "0.0.0",
+  "description": "manage a neo4j server installation",
+  "main": "neosv.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/jonpacker/neo4j-supervisor.git"
+  },
+  "author": "Jon Packer",
+  "license": "BSD",
+  "devDependencies": {
+    "mocha": "~1.7.3",
+    "neo4j-vm": "~0.1.2"
+  }
+}
