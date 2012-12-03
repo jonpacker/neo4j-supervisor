@@ -23,16 +23,16 @@ describe('supervisor', function() {
   });
 
   it('should check if a server is running', function(done) {
-    sv.running(function(yep) {
+    neo.running(function(yep) {
       assert.ok(!yep);
       done();
     });
   });
 
   it('should start a server', function(done) {
-    sv.start(function(err) {
+    neo.start(function(err) {
       assert.ok(!err);
-      sv.running(function(yep) {
+      neo.running(function(yep) {
         assert.ok(yep);
         done();
       });
