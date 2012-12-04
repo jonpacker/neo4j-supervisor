@@ -79,4 +79,25 @@ describe('supervisor', function() {
       }
     ], done);
   });
+
+  it('should restart the server', function(done) {
+    var firstPid;
+    async.series([
+      neo.start.bind(neo),
+      function(cb) {
+        neo.pid(function(err,pid) {
+          firstPid = pid;
+          cb();
+        });
+      },
+      neo.restart.bind(neo),
+      naan.curry(assertRunning, true),
+      function(cb) {
+        neo.pid(function(err, pid) {
+          assert(firstPid != pid);
+          cb();
+        });
+      }
+    ], done);
+  });
 });
