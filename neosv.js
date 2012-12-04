@@ -45,6 +45,9 @@ supervisor.prototype.start = function(callback) {
 supervisor.prototype.stop = function(callback) {
   this._run('stop', callback);
 };
+supervisor.prototype.restart = function(callback) {
+  this._run('restart', callback);
+};
 
 supervisor.prototype.pid = function(callback) {
   this._run('status', function(err, status) {
