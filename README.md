@@ -26,6 +26,9 @@ doesn't work on windows. :~~[
 
 ## functions
 
+**all the callbacks are in the format `function(err, output)` unless otherwise
+specified**
+
 * **neo.clean(cb)** - purge all data from the database. this is rather forceful - it
   physically wipes that data from the disk. therefore I don't suggest trying it
   while the server is running. (but if you feel like trying it, go ahead! i
@@ -39,4 +42,4 @@ doesn't work on windows. :~~[
   configuration values (as an obj), or a single key, or set a value, depending
   on which args are passed (key and value are optional).
 * **neo.port(port, cb)** - set the port of the server to `port`.
-
+* **neo.pid(cb)** - find the pid of the server or null
