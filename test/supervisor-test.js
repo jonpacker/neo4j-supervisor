@@ -38,7 +38,6 @@ describe('supervisor', function() {
 
   it('should start a server', function(done) {
     neo.start(function(err) {
-      console.log(err);
       assert.ok(!err);
       assertRunning(true, done);
     });
@@ -50,6 +49,34 @@ describe('supervisor', function() {
       naan.curry(assertRunning, true),
       neo.stop.bind(neo),
       naan.curry(assertRunning, false)
+    ], done);
+  });
+
+  it('should get the pid of a running server', function(done) {
+    var checkPid = function(pid, cb) {
+      var ps = spawn('ps', ['-p', pid]);
+      var output = '';
+      ps.stdout.on('data', function(data) { output += data });
+      ps.on('exit', function() {
+        assert(!!/neo4j/.exec(output));
+        cb();
+      });
+    };
+    
+    async.series([
+      neo.start.bind(neo),
+      function(cb) {
+        neo.pid(function(err, pid) {
+          checkPid(pid, cb);
+        });
+      },
+      neo.stop.bind(neo),
+      function(cb) {
+        neo.pid(function(err, pid) {
+          assert(pid == null);
+          cb();
+        });
+      }
     ], done);
   });
 });
