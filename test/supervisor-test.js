@@ -175,4 +175,33 @@ describe('supervisor', function() {
       }
     ], done);
   });
+  
+  it('should add a new config value to the configuration', function(done) {
+    async.series([
+      function(cb) {
+        neo.config('this.is.a.new.thing', 'potato', cb);
+      },
+      function(cb) {
+        neo.config('this.is.a.new.thing', function(err, val) {
+          assert(!err);
+          assert(val == 'potato');
+          cb();
+        });
+      },
+      naan.b.curry(neo, neo.config, 'this.is.a.new.thing', null)
+    ], done);
+  });
+
+  it('should delete a config value', function(done) {
+    async.series([
+      naan.b.curry(neo, neo.config, 'thing123', '456'),
+      naan.b.curry(neo, neo.config, 'thing123', null),
+      function(cb) {
+        neo.config('thing123', function(err) {
+          assert(!!err);
+          cb();
+        });
+      }
+    ], done);
+  });
 });
