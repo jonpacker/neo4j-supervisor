@@ -46,4 +46,12 @@ supervisor.prototype.stop = function(callback) {
   this._run('stop', callback);
 };
 
+supervisor.prototype.pid = function(callback) {
+  this._run('status', function(err, status) {
+    if (err) return callback(err, null);
+    var match = /pid\s+(\d+)/.exec(status);
+    callback(null, match ? parseInt(match[1], 10) : null);
+  });
+};
+
 module.exports = supervisor;
