@@ -4,6 +4,8 @@ var sv = require('../');
 var nvm = require('neo4j-vm');
 var async = require('async');
 var naan = require('naan');
+var fs = require('fs');
+var join = require('path').join;
 
 describe('supervisor', function() {
   var serverpath;
@@ -95,6 +97,79 @@ describe('supervisor', function() {
       function(cb) {
         neo.pid(function(err, pid) {
           assert(firstPid != pid);
+          cb();
+        });
+      }
+    ], done);
+  });
+
+
+  it('should read a configuration value of the server', function(done) {
+    var configfile = join(serverpath, 'conf/neo4j-server.properties');
+    async.waterfall([
+      function(cb) {
+        fs.readFile(configfile, 'utf8', function(err, dataz) {
+          var match = /^\s*org.neo4j.server.webserver.port=(\d+)/.exec(dataz);
+          if (!match) assert(false, "malformed config file, cannot continue");
+          cb(null, match[1]);
+        });
+      },
+      function(port, cb) {
+        neo.config('org.neo4j.server.webserver.port', function(err, value) {
+          assert(!err);
+          assert(value == port);
+          cb();
+        });
+      }
+    ], done);
+  });
+
+  it('should set a configuration value of the server', function(done) {
+    async.waterfall([
+      naan.b.curry(neo, neo.config, 'org.neo4j.server.webserver.port'),
+      function(startPort, cb) {
+        neo.config('org.neo4j.server.webserver.port', '12345', function(err) {
+          cb(err, startPort, '12345');
+        });
+      },
+      function(startPort, newPort, cb) {
+        neo.config('org.neo4j.server.webserver.port', function(err, port) {
+          assert(port == newPort);
+          cb(err, startPort);
+        });
+      },
+      function(startPort, cb) {
+        neo.config('org.neo4j.server.webserver.port', startPort, cb);
+      }
+    ], done);
+  });
+
+  it('should not clobber configuration formatting', function(done) {
+    var configfile = join(serverpath, 'conf/neo4j-server.properties');
+    async.waterfall([
+      function(cb) {
+        fs.readFile(configfile, 'utf8', function(err, dataz) {
+          cb(null, dataz);
+        });
+      },
+      function(config, cb) {
+        neo.config('org.neo4j.server.webserver.port', function(err, port) {
+          cb(err, config, port);
+        });
+      },
+      function(config, port, cb) {
+        neo.config('org.neo4j.server.webserver.port', '12345', function(err) {
+          cb(err, config, port);
+        });
+      },
+      function(config, port, cb) {
+        neo.config('org.neo4j.server.webserver.port', port, function(err) {
+          cb(err, config, port);
+        });
+      },
+      function(config, cb) {
+        fs.readFile(configfile, 'utf8', function(err, dataz) {
+          assert(dataz == config);
           cb();
         });
       }
