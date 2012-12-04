@@ -41,5 +41,6 @@ specified**
 * **neo.config([key], [value], cb)** - either get all of the server's
   configuration values (as an obj), or a single key, or set a value, depending
   on which args are passed (key and value are optional).
-* **neo.port(port, cb)** - set the port of the server to `port`.
+* **neo.port([port], cb)** - if `port` is specified, set the port of the server
+  to `port`. otherwise, get the port of the server.
 * **neo.pid(cb)** - find the pid of the server or null
