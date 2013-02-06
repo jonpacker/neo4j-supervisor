@@ -26,6 +26,18 @@ describe('supervisor', function() {
     });
   };
 
+	var restoreConfig = function(op) {
+		return function(cb) {
+			fs.readFile(neo.server.config, 'utf8', function(err, config) {
+				op(function(err) {
+					fs.writeFile(neo.server.config, config, 'utf8', function (ferr) {
+						cb(ferr || err);
+					});
+				});
+			});
+		};
+	};
+
   beforeEach(function() {
     neo = sv(serverpath);
   });
@@ -33,6 +45,106 @@ describe('supervisor', function() {
   afterEach(function(done) {
     neo.stop(done);
   });
+
+  it('should read a configuration value of the server', function(done) {
+    var configfile = join(serverpath, 'conf/neo4j-server.properties');
+    async.waterfall([
+      function(cb) {
+        fs.readFile(configfile, 'utf8', function(err, dataz) {
+          var match = /org.neo4j.server.webserver.port=(\d+)/gi.exec(dataz);
+          if (!match) assert(false, "malformed config file, cannot continue");
+          cb(null, match[1]);
+        });
+      },
+      function(port, cb) {
+        neo.config('org.neo4j.server.webserver.port', function(err, value) {
+          assert(!err, err);
+          assert(value == port);
+          cb();
+        });
+      }
+    ], done);
+  });
+
+  it('should set a configuration value of the server', 
+	restoreConfig(function(done) {
+    async.waterfall([
+      function(cb) {
+        neo.config('org.neo4j.server.webserver.port', '12345', function(err) {
+          cb(err, '12345');
+        });
+      },
+      function(newPort, cb) {
+        neo.config('org.neo4j.server.webserver.port', function(err, port) {
+          assert(port == newPort);
+          cb(err);
+        });
+      }
+		], done);
+  }));
+
+  it('should not clobber configuration formatting', 
+	restoreConfig(function(done) {
+    var configfile = join(serverpath, 'conf/neo4j-server.properties');
+    async.waterfall([
+      function(cb) {
+        fs.readFile(configfile, 'utf8', function(err, dataz) {
+          cb(null, dataz);
+        });
+      },
+      function(config, cb) {
+        neo.config('org.neo4j.server.webserver.port', function(err, port) {
+          cb(err, config, port);
+        });
+      },
+      function(config, port, cb) {
+        neo.config('org.neo4j.server.webserver.port', '12345', function(err) {
+          cb(err, config, port);
+        });
+      },
+      function(config, port, cb) {
+        neo.config('org.neo4j.server.webserver.port', port, function(err) {
+          cb(err, config, port);
+        });
+      },
+      function(config, port, cb) {
+        fs.readFile(configfile, 'utf8', function(err, dataz) {
+          assert(dataz == config);
+          cb();
+        });
+      }
+    ], done);
+  }));
+  
+  it('should add a new config value to the configuration', 
+	restoreConfig(function(done) {
+    async.series([
+      function(cb) {
+        neo.config('this.is.a.new.thing', 'potato', cb);
+      },
+      function(cb) {
+        neo.config('this.is.a.new.thing', function(err, val) {
+          assert(!err, err);
+          assert(val == 'potato');
+          cb();
+        });
+      },
+      naan.b.curry(neo, neo.config, 'this.is.a.new.thing', null)
+    ], done);
+  }));
+
+  it('should delete a config value', restoreConfig(function(done) {
+    async.series([
+      naan.b.curry(neo, neo.config, 'thing123', '456'),
+      naan.b.curry(neo, neo.config, 'thing123', null),
+      function(cb) {
+        neo.config('thing123', function(err) {
+          assert(!!err);
+          cb();
+        });
+      }
+    ], done);
+  }));
 
   it('should check if a server is running', function(done) {
     assertRunning(false, done);
@@ -101,107 +213,5 @@ describe('supervisor', function() {
         });
       }
     ], done);
-  });
-
-
-  it('should read a configuration value of the server', function(done) {
-    var configfile = join(serverpath, 'conf/neo4j-server.properties');
-    async.waterfall([
-      function(cb) {
-        fs.readFile(configfile, 'utf8', function(err, dataz) {
-          var match = /^\s*org.neo4j.server.webserver.port=(\d+)/.exec(dataz);
-          if (!match) assert(false, "malformed config file, cannot continue");
-          cb(null, match[1]);
-        });
-      },
-      function(port, cb) {
-        neo.config('org.neo4j.server.webserver.port', function(err, value) {
-          assert(!err);
-          assert(value == port);
-          cb();
-        });
-      }
-    ], done);
-  });
-
-  it('should set a configuration value of the server', function(done) {
-    async.waterfall([
-      naan.b.curry(neo, neo.config, 'org.neo4j.server.webserver.port'),
-      function(startPort, cb) {
-        neo.config('org.neo4j.server.webserver.port', '12345', function(err) {
-          cb(err, startPort, '12345');
-        });
-      },
-      function(startPort, newPort, cb) {
-        neo.config('org.neo4j.server.webserver.port', function(err, port) {
-          assert(port == newPort);
-          cb(err, startPort);
-        });
-      },
-      function(startPort, cb) {
-        neo.config('org.neo4j.server.webserver.port', startPort, cb);
-      }
-    ], done);
-  });
-
-  it('should not clobber configuration formatting', function(done) {
-    var configfile = join(serverpath, 'conf/neo4j-server.properties');
-    async.waterfall([
-      function(cb) {
-        fs.readFile(configfile, 'utf8', function(err, dataz) {
-          cb(null, dataz);
-        });
-      },
-      function(config, cb) {
-        neo.config('org.neo4j.server.webserver.port', function(err, port) {
-          cb(err, config, port);
-        });
-      },
-      function(config, port, cb) {
-        neo.config('org.neo4j.server.webserver.port', '12345', function(err) {
-          cb(err, config, port);
-        });
-      },
-      function(config, port, cb) {
-        neo.config('org.neo4j.server.webserver.port', port, function(err) {
-          cb(err, config, port);
-        });
-      },
-      function(config, cb) {
-        fs.readFile(configfile, 'utf8', function(err, dataz) {
-          assert(dataz == config);
-          cb();
-        });
-      }
-    ], done);
-  });
-  
-  it('should add a new config value to the configuration', function(done) {
-    async.series([
-      function(cb) {
-        neo.config('this.is.a.new.thing', 'potato', cb);
-      },
-      function(cb) {
-        neo.config('this.is.a.new.thing', function(err, val) {
-          assert(!err);
-          assert(val == 'potato');
-          cb();
-        });
-      },
-      naan.b.curry(neo, neo.config, 'this.is.a.new.thing', null)
-    ], done);
-  });
-
-  it('should delete a config value', function(done) {
-    async.series([
-      naan.b.curry(neo, neo.config, 'thing123', '456'),
-      naan.b.curry(neo, neo.config, 'thing123', null),
-      function(cb) {
-        neo.config('thing123', function(err) {
-          assert(!!err);
-          cb();
-        });
-      }
-    ], done);
-  });
+  }); 
 });
