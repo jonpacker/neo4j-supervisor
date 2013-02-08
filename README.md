@@ -44,3 +44,7 @@ specified**
 * **neo.port([port], cb)** - if `port` is specified, set the port of the server
   to `port`. otherwise, get the port of the server.
 * **neo.pid(cb)** - find the pid of the server or null
+* **neo.endpoint(cb)** - get the endpoint configuration of the server. calls
+	back with an object containing `server`—the location of the server with
+  protocol and port, and `endpoint`—the path of the api endpoint on top of
+	`server`. this conveniently fits straight into [seraph](http://www.github.com/brikteknologier/seraph).
