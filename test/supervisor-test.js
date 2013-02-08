@@ -6,6 +6,7 @@ var async = require('async');
 var naan = require('naan');
 var fs = require('fs');
 var join = require('path').join;
+var seraph = require('seraph');
 
 describe('supervisor', function() {
   var serverpath;

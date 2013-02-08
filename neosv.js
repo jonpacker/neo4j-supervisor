@@ -1,5 +1,6 @@
 var spawn = require('child_process').spawn;
 var naan = require('naan');
+var async = require('async');
 var join = require('path').join;
 var fs = require('fs');
 
@@ -95,7 +96,28 @@ supervisor.prototype.config = function(key, value, callback) {
       }
     }
   });
+};
 
+supervisor.prototype.clean = function(callback) {
+	var self = this;
+
+	var cleanData = function(dbpath, callback) {
+		dbpath = path.join(self.server.path, dbpath);
+		fs.rmdir(dbpath, function(err) {
+			if (err && err.code != 'ENOENT') return callback(err);
+			fs.mkdir(dbpath, callback);
+		});
+	};
+
+	async.waterfall([
+		this.running.bind(this),
+		function(running, next) {
+			if (!running) return next();
+			self.stop(next);
+		},
+		this.config.bind(this, 'org.neo4j.server.database.location'),
+		cleanData
+	], callback);
 };
 
 module.exports = supervisor;
