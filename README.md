@@ -43,6 +43,7 @@ specified**
   on which args are passed (key and value are optional).
 * **neo.port([port], cb)** - if `port` is specified, set the port of the server
   to `port`. otherwise, get the port of the server.
+* **neo.host([host], cb)** - same as `port`, but with hostname.
 * **neo.pid(cb)** - find the pid of the server or null
 * **neo.endpoint(cb)** - get the endpoint configuration of the server. calls
 	back with an object containing `server`—the location of the server with

@@ -19,7 +19,18 @@ var supervisor = function (serverpath) {
     bin: join(serverpath, 'bin/neo4j'),
     config: join(serverpath, 'conf/neo4j-server.properties')
   };
+
+	addConfigCurries.call(this, {
+		'host': 'org.neo4j.server.webserver.address',
+		'port': 'org.neo4j.server.webserver.port'
+	});
 }
+
+var addConfigCurries = function(configCurries) {
+	for (var target in configCurries) {
+		this[target] = naan.b.curry(this, this.config, configCurries[target]);
+	}	
+};
 
 supervisor.prototype._run = function(command, callback) {
   var neo = spawn(this.server.bin, [command]);

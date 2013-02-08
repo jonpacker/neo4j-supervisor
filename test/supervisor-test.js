@@ -85,6 +85,25 @@ describe('supervisor', function() {
 		], done);
   }));
 
+	it('should set the port of the server using the port shortcut',
+	restoreConfig(function(done) {
+		async.waterfall([
+			neo.port.bind(neo),
+			function(port, next) {
+				neo.port('45212', function(err) {
+					next(err, port);
+				});
+			},
+			function(port, next) {
+				neo.port(function(err, currentPort) {
+					assert(currentPort != port);
+					assert(currentPort == '45212');
+					next(err);
+				});
+			}
+		], done);
+	}));
+
   it('should not clobber configuration formatting', 
 	restoreConfig(function(done) {
     var configfile = join(serverpath, 'conf/neo4j-server.properties');
@@ -216,7 +235,7 @@ describe('supervisor', function() {
         cb();
       });
     };
-    
+
     async.series([
       neo.start.bind(neo),
       function(cb) {
