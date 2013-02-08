@@ -3,6 +3,7 @@ var naan = require('naan');
 var async = require('async');
 var join = require('path').join;
 var fs = require('fs');
+var url = require('url');
 
 //Run the given neo4j instance with the given command and return the output
 
@@ -57,6 +58,24 @@ supervisor.prototype.pid = function(callback) {
     var match = /pid\s+(\d+)/.exec(status);
     callback(null, match ? parseInt(match[1], 10) : null);
   });
+};
+
+supervisor.prototype.endpoint = function(callback) {
+	async.map([
+		'org.neo4j.server.webserver.address'
+		'org.neo4j.server.webserver.port',
+		'org.neo4j.server.webadmin.data.uri'
+	], this.config.bind(this), function(err, settings) {
+		if (err) return callback(err);
+		callback(null, {
+			server: url.format({
+				protocol: 'http',
+				hostname: settings[0],
+				port: settings[1]
+			}),
+			endpoint: settings[2]
+		});
+	});
 };
 
 supervisor.prototype.config = function(key, value, callback) {
