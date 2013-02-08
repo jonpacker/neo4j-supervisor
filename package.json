@@ -15,7 +15,8 @@
   "devDependencies": {
     "mocha": "~1.7.3",
     "neo4j-vm": "~0.1.2",
-    "async": "~0.1.22"
+    "async": "~0.1.22",
+    "seraph": "~0.4.0"
   },
   "dependencies": {
     "naan": "~1.3.10"

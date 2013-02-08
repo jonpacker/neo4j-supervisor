@@ -7,6 +7,7 @@ var naan = require('naan');
 var fs = require('fs');
 var join = require('path').join;
 var seraph = require('seraph');
+var url = require('url');
 
 describe('supervisor', function() {
   var serverpath;
@@ -146,6 +147,44 @@ describe('supervisor', function() {
       }
     ], done);
   }));
+
+	it('should retrieve an endpoint matching the config', function(done) {
+		async.map([
+			'org.neo4j.server.webserver.address',
+			'org.neo4j.server.webserver.port',
+			'org.neo4j.server.webadmin.data.uri'
+		], neo.config.bind(neo), function(err, settings) {
+			assert(!err);
+			neo.endpoint(function(err, ep) {
+				assert(!err);
+				var parsedUrl = url.parse(ep.server);
+				assert.equal(parsedUrl.hostname, settings[0]);
+				assert.equal(parsedUrl.port, settings[1]);
+				assert.equal(ep.endpoint, settings[2]);
+				done();
+			});
+		});
+	});
+
+	it('should change endpoint to reflect updated config', 
+	restoreConfig(function(done) {
+		async.series([
+			function(next) {
+				neo.endpoint(next);
+			},
+			function(next) {
+				neo.config('org.neo4j.server.webserver.port', '8768', next);
+			},
+			function(next) {
+				neo.endpoint(function(err, ep) {
+					assert(!err);
+					var parsedUrl = url.parse(ep.server);
+					assert.equal(parsedUrl.port, '8768');
+					done();
+				});
+			}
+		], done);
+	}));
 
   it('should check if a server is running', function(done) {
     assertRunning(false, done);

@@ -62,7 +62,7 @@ supervisor.prototype.pid = function(callback) {
 
 supervisor.prototype.endpoint = function(callback) {
 	async.map([
-		'org.neo4j.server.webserver.address'
+		'org.neo4j.server.webserver.address',
 		'org.neo4j.server.webserver.port',
 		'org.neo4j.server.webadmin.data.uri'
 	], this.config.bind(this), function(err, settings) {
