@@ -4,6 +4,8 @@ var async = require('async');
 var join = require('path').join;
 var fs = require('fs');
 var url = require('url');
+var path = require('path');
+var rimraf = require('rimraf');
 
 //Run the given neo4j instance with the given command and return the output
 
@@ -118,11 +120,11 @@ supervisor.prototype.config = function(key, value, callback) {
 };
 
 supervisor.prototype.clean = function(callback) {
-	var self = this;
+	var self = this, wasRunning;
 
 	var cleanData = function(dbpath, callback) {
 		dbpath = path.join(self.server.path, dbpath);
-		fs.rmdir(dbpath, function(err) {
+		rimraf(dbpath, function(err) {
 			if (err && err.code != 'ENOENT') return callback(err);
 			fs.mkdir(dbpath, callback);
 		});
@@ -131,11 +133,16 @@ supervisor.prototype.clean = function(callback) {
 	async.waterfall([
 		this.running.bind(this),
 		function(running, next) {
+			wasRunning = running;
 			if (!running) return next();
-			self.stop(next);
+			self.stop(function(err) { next(err) });
 		},
 		this.config.bind(this, 'org.neo4j.server.database.location'),
-		cleanData
+		cleanData,
+		function(next) {
+			if (!wasRunning) return next();
+			self.start(function(err) { next(err) });
+		}
 	], callback);
 };
 

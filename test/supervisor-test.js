@@ -254,4 +254,61 @@ describe('supervisor', function() {
       }
     ], done);
   }); 
+
+	describe('`clean` function', function() {
+		it('should clean data from the database', function(done) {
+			async.waterfall([
+				function startServer(next) {
+					neo.start(next);
+				},
+				function createSeraph(output, next) {
+					neo.endpoint(function(err, ep) {
+						return next(err, seraph(ep));
+					});
+				},
+				function writeData(db, next) {
+					db.save({ thing: 'data' }, function(err, node) {
+						next(err, db, node);
+					});
+				},
+				function clean(db, node, next) {
+					neo.clean(function(err) {
+						next(err, db, node);
+					});
+				},
+				function checkData(db, node, next) {
+					db.read(node.id, function(err, node) {
+						assert(!!err);
+						assert(!node);
+						next();
+					});
+				}
+			], done);
+		});
+
+		it('should not start the server if it is stopped', function(done) {
+			neo.clean(function(err) {
+				assert(!err);
+				neo.running(function(err, running) {
+					assert(!err);
+					assert(!running);
+					done();
+				});
+			});
+		});
+
+		it('should restart the server it was started', function(done) {
+			async.series([
+				neo.start.bind(neo),
+				neo.clean.bind(neo),
+				function (cb) {
+					neo.running(function(err, running) {
+						assert(!err);
+						assert(!!running);
+						cb();
+					})
+				}
+			], done);
+		});
+	});
 });
