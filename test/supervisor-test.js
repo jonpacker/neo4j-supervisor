@@ -154,6 +154,22 @@ describe('supervisor', function() {
     ], done);
   }));
 
+	it('should not read commented values from the config',
+	restoreConfig(function(done) {
+		async.waterfall([
+			naan.curry(fs.readFile, neo.server.config, 'utf8'),
+			function(config, next) {
+				next(null, config + '\r\n#thing.key=value\r\n');
+			},
+			naan.curry(fs.writeFile, neo.server.config),
+			neo.config.bind(neo, 'thing.key'),
+		], function(err) {
+			assert(!!err);
+			assert(!!err.message.match(/thing\.key/));
+			done();
+		});
+	}));
+
   it('should delete a config value', restoreConfig(function(done) {
     async.series([
       naan.b.curry(neo, neo.config, 'thing123', '456'),

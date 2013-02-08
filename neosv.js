@@ -99,10 +99,10 @@ supervisor.prototype.config = function(key, value, callback) {
 
   var mutateConfig = function(config) {
     if (value === null) {
-      var matcher = new RegExp("([\r\n]*)" + key + "=.*[\r\n]*");
+      var matcher = new RegExp("(^|[\r\n]+)(?![#!])" + key + "=.*[\r\n]*");
       return config.replace(matcher, "$1");
     } else {
-      var matcher = new RegExp("([\r\n]*)" + key + "=.*([\r\n]*)");
+      var matcher = new RegExp("(^|[\r\n]+)(?![#!])" + key + "=.*([\r\n]*)");
 			if (!config.match(matcher)) {
 				// should probably check the line endings of the file first.
 				return config + '\r\n' + key + '=' + value;
@@ -119,12 +119,12 @@ supervisor.prototype.config = function(key, value, callback) {
     if (value !== undefined) {
       fs.writeFile(self.server.config, mutateConfig(config), 'utf8', callback);
     } else {
-      var matcher = new RegExp("[\r\n]*" + key + "=(.*)[\r\n]*");
+      var matcher = new RegExp("(^|[\r\n]+)(?![#!])" + key + "=(.*)[\r\n]*");
       var matches = matcher.exec(config);
       if (!matches) {
         callback(new Error("Configuration key `" + key + "` not found."));
       } else {
-        callback(null, matches[1]);
+        callback(null, matches[2]);
       }
     }
   });
