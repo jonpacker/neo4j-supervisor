@@ -74,16 +74,23 @@ supervisor.prototype.pid = function(callback) {
 };
 
 supervisor.prototype.endpoint = function(callback) {
+	var self = this;
+	var configFetchNoError = function(key, callback) {
+		self.config(key, function(err, value) {
+			if (err && err.code != 'ENOKEY') return callback(err);
+			else callback(null, value);
+		});
+	};
 	async.map([
 		'org.neo4j.server.webserver.address',
 		'org.neo4j.server.webserver.port',
 		'org.neo4j.server.webadmin.data.uri'
-	], this.config.bind(this), function(err, settings) {
-		if (err) return callback(err);
+	], configFetchNoError, function(err, settings) {
+		if (err && err != 'ENOKEY') return callback(err);
 		callback(null, {
 			server: url.format({
 				protocol: 'http',
-				hostname: settings[0],
+				hostname: settings[0] || '127.0.0.1',
 				port: settings[1]
 			}),
 			endpoint: settings[2]
@@ -122,7 +129,9 @@ supervisor.prototype.config = function(key, value, callback) {
       var matcher = new RegExp("(^|[\r\n]+)(?![#!])" + key + "=(.*)[\r\n]*");
       var matches = matcher.exec(config);
       if (!matches) {
-        callback(new Error("Configuration key `" + key + "` not found."));
+        var err = new Error("Configuration key `" + key + "` not found.");
+				err.code = 'ENOKEY';
+				callback(err);
       } else {
         callback(null, matches[2]);
       }

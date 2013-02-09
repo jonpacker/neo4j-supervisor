@@ -165,7 +165,7 @@ describe('supervisor', function() {
 			neo.config.bind(neo, 'thing.key'),
 		], function(err) {
 			assert(!!err);
-			assert(!!err.message.match(/thing\.key/));
+			assert(err.code == 'ENOKEY');
 			done();
 		});
 	}));
@@ -184,16 +184,22 @@ describe('supervisor', function() {
   }));
 
 	it('should retrieve an endpoint matching the config', function(done) {
+		var configFetchNoError = function(key, callback) {
+			neo.config(key, function(err, value) {
+				if (err && err.code != 'ENOKEY') return callback(err);
+				else callback(null, value);
+			});
+		};
 		async.map([
 			'org.neo4j.server.webserver.address',
 			'org.neo4j.server.webserver.port',
 			'org.neo4j.server.webadmin.data.uri'
-		], neo.config.bind(neo), function(err, settings) {
+		], configFetchNoError, function(err, settings) {
 			assert(!err);
 			neo.endpoint(function(err, ep) {
 				assert(!err);
 				var parsedUrl = url.parse(ep.server);
-				assert.equal(parsedUrl.hostname, settings[0]);
+				assert.equal(parsedUrl.hostname, '127.0.0.1');
 				assert.equal(parsedUrl.port, settings[1]);
 				assert.equal(ep.endpoint, settings[2]);
 				done();
