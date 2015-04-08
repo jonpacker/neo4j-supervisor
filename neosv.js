@@ -93,7 +93,7 @@ supervisor.prototype.endpoint = function(callback) {
 				hostname: settings[0] || '127.0.0.1',
 				port: settings[1]
 			}),
-			endpoint: settings[2]
+			endpoint: settings[2] || '/db/data'
 		});
 	});
 };
