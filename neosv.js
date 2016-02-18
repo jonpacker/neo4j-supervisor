@@ -13,7 +13,7 @@ var supervisor = function (serverpath) {
   if (!(this instanceof supervisor)) {
     return new supervisor(serverpath);
   }
-  
+
   this.server = {
     path: serverpath,
     bin: join(serverpath, 'bin/neo4j'),
@@ -29,7 +29,7 @@ var supervisor = function (serverpath) {
 var addConfigCurries = function(configCurries) {
 	for (var target in configCurries) {
 		this[target] = naan.b.curry(this, this.config, configCurries[target]);
-	}	
+	}
 };
 
 supervisor.prototype._run = function(command, callback) {
@@ -102,7 +102,13 @@ supervisor.prototype.config = function(key, value, callback) {
   if (typeof value == 'function') {
     callback = value;
     value = undefined;
-  } 
+  }
+
+  if (typeof key == 'function') {
+    callback = key;
+    value = undefined;
+    key = undefined;
+  }
 
   var mutateConfig = function(config) {
     if (value === null) {
@@ -118,11 +124,27 @@ supervisor.prototype.config = function(key, value, callback) {
 			}
     }
   };
-  
+
 	var self = this;
   fs.readFile(this.server.config, 'utf8', function(err, config) {
     if (err) return callback(err);
-    
+
+    if (!key && !value) {
+      var matcher = new RegExp("(^|[\r\n]+)(?![#!]).*=.*([\r\n]*)", "gm");
+      var properties = {};
+      var property;
+      
+      while( (property = matcher.exec(config)) !== null) {
+        var values = property[0].split('=');
+        var propName = values[0].trim();
+        var propValue = values[1].trim();
+
+        properties[propName] = propValue;
+      }
+
+      return callback(undefined, properties);
+    }
+
     if (value !== undefined) {
       fs.writeFile(self.server.config, mutateConfig(config), 'utf8', callback);
     } else {

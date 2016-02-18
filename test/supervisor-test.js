@@ -68,7 +68,7 @@ describe('supervisor', function() {
     ], done);
   });
 
-  it('should set a configuration value of the server', 
+  it('should set a configuration value of the server',
 	restoreConfig(function(done) {
     async.waterfall([
       function(cb) {
@@ -83,6 +83,25 @@ describe('supervisor', function() {
         });
       }
 		], done);
+  }));
+
+  it('should return the config of the server as an object',
+  restoreConfig(function(done) {
+    async.series([
+      function(cb) {
+        neo.config('this.is.a.new.thing', 'wombat', cb);
+      },
+      function(cb) {
+        neo.config('this.is.another.new.thing', 'astronaut', cb);
+      },
+      function(cb) {
+        neo.config(function(err, output) {
+          assert(!err);
+          assert(output['this.is.a.new.thing'] == 'wombat', 'this.is.a.new.thing is missing');
+          assert(output['this.is.another.new.thing'] == 'astronaut', 'this.is.another.new.thing is missing');
+          cb();
+        });
+      }], done);
   }));
 
 	it('should set the port of the server using the port shortcut',
@@ -104,7 +123,7 @@ describe('supervisor', function() {
 		], done);
 	}));
 
-  it('should not clobber configuration formatting', 
+  it('should not clobber configuration formatting',
 	restoreConfig(function(done) {
     var configfile = join(serverpath, 'conf/neo4j-server.properties');
     async.waterfall([
@@ -136,8 +155,8 @@ describe('supervisor', function() {
       }
     ], done);
   }));
-  
-  it('should add a new config value to the configuration', 
+
+  it('should add a new config value to the configuration',
 	restoreConfig(function(done) {
     async.series([
       function(cb) {
@@ -207,7 +226,7 @@ describe('supervisor', function() {
 		});
 	});
 
-	it('should change endpoint to reflect updated config', 
+	it('should change endpoint to reflect updated config',
 	restoreConfig(function(done) {
 		async.series([
 			function(next) {
@@ -294,7 +313,7 @@ describe('supervisor', function() {
         });
       }
     ], done);
-  }); 
+  });
 
 	describe('`clean` function', function() {
 		it('should clean data from the database', function(done) {
