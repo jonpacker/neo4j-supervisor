@@ -13,7 +13,7 @@ var semver = require('semver');
 
 var supervisor = function (serverpath, version) {
   if (!(this instanceof supervisor)) {
-    return new supervisor(serverpath);
+    return new supervisor(serverpath, version);
   }
 
   assert(version, 'version must be specified')
@@ -24,7 +24,7 @@ var supervisor = function (serverpath, version) {
     bin: join(serverpath, 'bin/neo4j'),
   };
 
-  if (overVersion3) {
+  if (semver.gte(this.version, '3.0.0')) {
     this.server.config = join(serverpath, 'conf/neo4j.conf');
   } else {
     this.server.config = join(serverpath, 'conf/neo4j-server.properties');
@@ -104,6 +104,7 @@ supervisor.prototype._run = function(command, callback) {
 
 supervisor.prototype.running = function(callback) {
   this._run('status', function(err, status) {
+    console.log(err, status);
     if (err) return callback(err);
     callback(null, !!/pid\s+\d+/.exec(status));
   });
@@ -148,12 +149,12 @@ supervisor.prototype.endpoint = function(callback) {
 	async.map(settingsToGet, configFetchNoError, function(err, settings) {
 		if (err && err != 'ENOKEY') return callback(err);
     var addr, host, port;
-    if (semver.gte(this.version, '3.0.0')) {
+    if (semver.gte(self.version, '3.0.0')) {
       host = settings[0].split(':')[0];
       port = settings[0].split(':')[1];
     } else {
-      host = settings[0];
-      port = settings[1];
+      host = settings[0] || '127.0.0.1';
+      port = settings[1] || '7474';
     }
 		callback(null, {
 			server: url.format({
