@@ -10,20 +10,34 @@ var seraph = require('seraph');
 var url = require('url');
 
 describe('supervisor', function() {
-  var serverpath;
+  var pre3path;
+  var pre3vers = '2.2.3';
+  var post3path;
+  var post3vers = '3.0.3';
   var neo;
   before(function(done) {
-    nvm('1.9.M01', 'community', false, function(err, path) {
-      if (err) return done(err);
-      serverpath = path;
-      done();
-    });
+    async.parallel([
+      function(cb) {
+        nvm(pre3vers, 'community', false, function(err, path) {
+          if (err) return cb(err);
+          pre3path = path;
+          cb();
+        });
+      },
+      function(cb) {
+        nvm(post3vers, 'community', false, function(err, path) {
+          if (err) return cb(err);
+          post3path = path;
+          cb();
+        });
+      }
+    ], done);
   });
 
   var assertRunning = function(running, cb) {
     neo.running(function(err, yep) {
-      assert.ok(!err)
-      assert.ok(yep == running);
+      assert.ok(!err,err.toString())
+      assert.ok(yep == running, yep +'');
       cb();
     });
   };
@@ -41,7 +55,7 @@ describe('supervisor', function() {
 	};
 
   beforeEach(function() {
-    neo = sv(serverpath);
+    neo = sv(pre3path, pre3vers);
   });
 
   afterEach(function(done) {
@@ -49,7 +63,7 @@ describe('supervisor', function() {
   });
 
   it('should read a configuration value of the server', function(done) {
-    var configfile = join(serverpath, 'conf/neo4j-server.properties');
+    var configfile = join(pre3path, 'conf/neo4j-server.properties');
     async.waterfall([
       function(cb) {
         fs.readFile(configfile, 'utf8', function(err, dataz) {
@@ -106,7 +120,7 @@ describe('supervisor', function() {
 
   it('should not clobber configuration formatting', 
 	restoreConfig(function(done) {
-    var configfile = join(serverpath, 'conf/neo4j-server.properties');
+    var configfile = join(pre3path, 'conf/neo4j-server.properties');
     async.waterfall([
       function(cb) {
         fs.readFile(configfile, 'utf8', function(err, dataz) {
@@ -201,7 +215,7 @@ describe('supervisor', function() {
 				var parsedUrl = url.parse(ep.server);
 				assert.equal(parsedUrl.hostname, '127.0.0.1');
 				assert.equal(parsedUrl.port, settings[1]);
-				assert.equal(ep.endpoint, settings[2]);
+				assert.equal(ep.endpoint, settings[2] || '/db/data');
 				done();
 			});
 		});
