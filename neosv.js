@@ -63,6 +63,29 @@ supervisor.prototype.host = function(newHost, callback) {
   }
 };
 
+supervisor.prototype.port = function(newPort, callback) {
+  if (semver.gte(this.version, '3.0.0')) {
+    if (typeof newPort == 'function') {
+      callback = newPort;
+      newPort = null;
+    }
+    if (!newPort) {
+      this.config('dbms.connector.http.address', function(err, addr) {
+        if (err) return callback(err);
+        else callback(null, addr.split(':')[0])
+      });
+    } else {
+      this.port(function(err, host) {
+        if (err) return callback(err);
+        this.config('dbms.connector.http.address', [host, newPort].join(':'), callback);
+      });
+    }
+  } else {
+    this.config('org.neo4j.server.webserver.port', newPort, callback);
+  }
+};
+
+
 supervisor.prototype._run = function(command, callback) {
   var neo = spawn(this.server.bin, [command]);
   var output = '';
