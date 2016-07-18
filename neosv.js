@@ -6,24 +6,29 @@ var fs = require('fs');
 var url = require('url');
 var path = require('path');
 var rimraf = require('rimraf');
+var assert = require('assert');
+var semver = require('semver');
 
 //Run the given neo4j instance with the given command and return the output
 
-var supervisor = function (serverpath) {
+var supervisor = function (serverpath, version) {
   if (!(this instanceof supervisor)) {
     return new supervisor(serverpath);
   }
+
+  assert(version, 'version must be specified')
+  this.version = version;
   
   this.server = {
     path: serverpath,
     bin: join(serverpath, 'bin/neo4j'),
-    config: join(serverpath, 'conf/neo4j-server.properties')
   };
 
-	addConfigCurries.call(this, {
-		'host': 'org.neo4j.server.webserver.address',
-		'port': 'org.neo4j.server.webserver.port'
-	});
+  if (overVersion3) {
+    this.server.config = join(serverpath, 'conf/neo4j.conf');
+  } else {
+    this.server.config = join(serverpath, 'conf/neo4j-server.properties');
+  }
 }
 
 var addConfigCurries = function(configCurries) {
