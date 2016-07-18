@@ -313,11 +313,15 @@ describe('supervisor', function() {
 	describe('`clean` function', function() {
 		it('should clean data from the database', function(done) {
 			async.waterfall([
+        function removeAuth(next) {
+          neo.config('dbms.security.auth_enabled', 'false', next);
+        },
 				function startServer(next) {
 					neo.start(next);
 				},
 				function createSeraph(output, next) {
 					neo.endpoint(function(err, ep) {
+            console.log(ep);
 						return next(err, seraph(ep));
 					});
 				},
