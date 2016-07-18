@@ -104,7 +104,7 @@ supervisor.prototype._run = function(command, callback) {
 
 supervisor.prototype.running = function(callback) {
   this._run('status', function(err, status) {
-    console.log(err, status);
+    if (err && err.message.match(/is not running/)) return callback(null, false);
     if (err) return callback(err);
     callback(null, !!/pid\s+\d+/.exec(status));
   });

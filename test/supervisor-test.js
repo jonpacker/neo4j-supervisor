@@ -36,8 +36,8 @@ describe('supervisor', function() {
 
   var assertRunning = function(running, cb) {
     neo.running(function(err, yep) {
-      assert.ok(!err,err.toString())
-      assert.ok(yep == running, yep +'');
+      assert.ok(!err)
+      assert.ok(yep == running);
       cb();
     });
   };
