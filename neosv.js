@@ -135,17 +135,31 @@ supervisor.prototype.endpoint = function(callback) {
 			else callback(null, value);
 		});
 	};
-	async.map([
-		'org.neo4j.server.webserver.address',
-		'org.neo4j.server.webserver.port',
-		'org.neo4j.server.webadmin.data.uri'
-	], configFetchNoError, function(err, settings) {
+  var settingsToGet;
+  if (semver.gte(this.version, '3.0.0')) {
+    settingsToGet = [ 'dbms.connector.http.address' ];
+  } else {
+    settingsToGet = [
+      'org.neo4j.server.webserver.address',
+      'org.neo4j.server.webserver.port',
+      'org.neo4j.server.webadmin.data.uri'
+    ];
+  }
+	async.map(settingsToGet, configFetchNoError, function(err, settings) {
 		if (err && err != 'ENOKEY') return callback(err);
+    var addr, host, port;
+    if (semver.gte(this.version, '3.0.0')) {
+      host = settings[0].split(':')[0];
+      port = settings[0].split(':')[1];
+    } else {
+      host = settings[0];
+      port = settings[1];
+    }
 		callback(null, {
 			server: url.format({
 				protocol: 'http',
-				hostname: settings[0] || '127.0.0.1',
-				port: settings[1]
+				hostname: host,
+				port: port
 			}),
 			endpoint: settings[2] || '/db/data'
 		});
