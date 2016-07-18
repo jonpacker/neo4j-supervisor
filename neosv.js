@@ -36,6 +36,32 @@ var addConfigCurries = function(configCurries) {
 		this[target] = naan.b.curry(this, this.config, configCurries[target]);
 	}	
 };
+    addConfigCurries.call(this, {
+      'host': 'org.neo4j.server.webserver.address',
+      'port': 'org.neo4j.server.webserver.port'
+    });
+
+supervisor.prototype.host = function(newHost, callback) {
+  if (semver.gte(this.version, '3.0.0')) {
+    if (typeof newHost == 'function') {
+      callback = newHost;
+      newHost = null;
+    }
+    if (!newHost) {
+      this.config('dbms.connector.http.address', function(err, addr) {
+        if (err) return callback(err);
+        else callback(null, addr.split(':')[1])
+      });
+    } else {
+      this.port(function(err, port) {
+        if (err) return callback(err);
+        this.config('dbms.connector.http.address', [newHost, port].join(':'), callback);
+      });
+    }
+  } else {
+    this.config('org.neo4j.server.webserver.address', newHost, callback);
+  }
+};
 
 supervisor.prototype._run = function(command, callback) {
   var neo = spawn(this.server.bin, [command]);
