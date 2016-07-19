@@ -8,11 +8,8 @@ var path = require('path');
 var rimraf = require('rimraf');
 var assert = require('assert');
 var semver = require('semver');
-var commandExists = require('command-exists');
-var augur = require('augur');
+var which = require('which');
 
-var reattachCommandExists = augur();
-commandExists('reattach-to-user-namespace', reattachCommandExists);
 
 //Run the given neo4j instance with the given command and return the output
 
@@ -90,23 +87,26 @@ supervisor.prototype.port = function(newPort, callback) {
   }
 };
 
+var reattachToUserNamespace = '';
+try {
+  reattachToUserNamespace = which.sync('reattach-to-user-namespace');
+} catch (e) { }
 
 supervisor.prototype._run = function(command, callback) {
-  reattachCommandExists.then(function(err, withReattach) {
-    var cmd = withReattach ? 'reattach-to-user-namespace ' + this.server.bin : this.server.bin;
-    var neo = spawn(cmd, [command], {detached:true});
-    var output = '';
-    var error = '';
-    neo.stdout.on('data', function(data) {
-      output += data;
-    });
-    neo.stderr.on('data', function(data) {
-      error += data;
-    });
-    neo.on('exit', function(code) {
-      if (code) callback(new Error(error || output));
-      else callback(null, output);
-    });
+  var bin = reattachToUserNamespace || this.server.bin;
+  var args = reattachToUserNamespace ? [this.server.bin, command] : [command];
+  var neo = spawn(bin, args, {detached:true});
+  var output = '';
+  var error = '';
+  neo.stdout.on('data', function(data) {
+    output += data;
+  });
+  neo.stderr.on('data', function(data) {
+    error += data;
+  });
+  neo.on('exit', function(code) {
+    if (code) callback(new Error(error || output));
+    else callback(null, output);
   });
 };
 
