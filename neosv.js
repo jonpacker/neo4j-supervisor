@@ -158,6 +158,7 @@ supervisor.prototype.endpoint = function(callback) {
 		if (err && err != 'ENOKEY') return callback(err);
     var addr, host, port;
     if (semver.gte(self.version, '3.0.0')) {
+      settings[0] = settings[0] || '127.0.0.1:7474';
       host = settings[0].split(':')[0];
       port = settings[0].split(':')[1];
     } else {
