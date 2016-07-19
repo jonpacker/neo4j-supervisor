@@ -41,6 +41,9 @@ specified**
   won't stop you.)
 * **neo.running(cb)** - check if the server is running. callback is given one arg,
   a boolean that's set to true if the server is running
+* **neo.attached(cb)** - check if the API endpoint is responding. there is a
+  brief period on startup where `running` will return true and `attached` will
+  return false.
 * **neo.start(cb)** - start the server
 * **neo.stop(cb)** - stop the server
 * **neo.restart(cb)** - restart the server
