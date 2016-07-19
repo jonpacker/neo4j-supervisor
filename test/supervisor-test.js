@@ -309,6 +309,135 @@ describe('supervisor', function() {
       }
     ], done);
   }); 
+  describe('neo4j 3', function() {
+    beforeEach(function() {
+      neo = sv(post3path, post3vers);
+    });
+
+    afterEach(function(done) {
+      neo.stop(done);
+    });
+
+    it('should check if a server is running', function(done) {
+      assertRunning(false, done);
+    });
+
+    it('should start a server', function(done) {
+      neo.start(function(err) {
+        assert.ok(!err);
+        assertRunning(true, done);
+      });
+    });
+
+    it('should stop a server', function(done) {
+      async.series([
+        neo.start.bind(neo),
+        naan.curry(assertRunning, true),
+        neo.stop.bind(neo),
+        naan.curry(assertRunning, false)
+      ], done);
+    });
+
+    it('should get the pid of a running server', function(done) {
+      var checkPid = function(pid, cb) {
+        var ps = spawn('ps', ['-p', pid]);
+        var output = '';
+        ps.stdout.on('data', function(data) { output += data });
+        ps.on('exit', function() {
+          assert(!!/neo4j/.exec(output));
+          cb();
+        });
+      };
+
+      async.series([
+        neo.start.bind(neo),
+        function(cb) {
+          neo.pid(function(err, pid) {
+            checkPid(pid, cb);
+          });
+        },
+        neo.stop.bind(neo),
+        function(cb) {
+          neo.pid(function(err, pid) {
+            assert(pid == null);
+            cb();
+          });
+        }
+      ], done);
+    });
+
+    it('should restart the server', function(done) {
+      var firstPid;
+      async.series([
+        neo.start.bind(neo),
+        function(cb) {
+          neo.pid(function(err,pid) {
+            firstPid = pid;
+            cb();
+          });
+        },
+        neo.restart.bind(neo),
+        naan.curry(assertRunning, true),
+        function(cb) {
+          neo.pid(function(err, pid) {
+            assert(firstPid != pid);
+            cb();
+          });
+        }
+      ], done);
+    }); 
+
+    it('should get the pid of a running server', function(done) {
+      var checkPid = function(pid, cb) {
+        var ps = spawn('ps', ['-p', pid]);
+        var output = '';
+        ps.stdout.on('data', function(data) { output += data });
+        ps.on('exit', function() {
+          assert(!!/neo4j/.exec(output));
+          cb();
+        });
+      };
+
+      async.series([
+        neo.start.bind(neo),
+        function(cb) {
+          neo.pid(function(err, pid) {
+            checkPid(pid, cb);
+          });
+        },
+        neo.stop.bind(neo),
+        function(cb) {
+          neo.pid(function(err, pid) {
+            assert(pid == null);
+            cb();
+          });
+        }
+      ], done);
+    });
+
+    it('should restart the server', function(done) {
+      var firstPid;
+      async.series([
+        neo.start.bind(neo),
+        function(cb) {
+          neo.pid(function(err,pid) {
+            firstPid = pid;
+            cb();
+          });
+        },
+        neo.restart.bind(neo),
+        naan.curry(assertRunning, true),
+        function(cb) {
+          neo.pid(function(err, pid) {
+            assert(firstPid != pid);
+            cb();
+          });
+        }
+      ], done);
+    }); 
+  });
+  //en3
+
 
 	describe('`clean` function', function() {
 		it('should clean data from the database', function(done) {
