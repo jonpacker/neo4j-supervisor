@@ -165,6 +165,7 @@ supervisor.prototype.stop = function(callback) {
   this._run('stop', callback);
 };
 supervisor.prototype.restart = function(callback) {
+  var self = this;
   this._run('restart', function(err, output) {
     if (err) return callback(err);
     else self.waitForAttach(function(err) {
