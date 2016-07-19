@@ -24,6 +24,12 @@ neo.start(function() { ... }); // start an instance
 
 doesn't work on windows. :~~[
 
+#### tmux
+
+Neo4j 3 has problems starting up inside tmux on OS X. To get this working, you'll
+need to run `brew install reattach-to-user-namespace`. It should just work on its
+own after this.
+
 ## functions
 
 **all the callbacks are in the format `function(err, output)` unless otherwise
