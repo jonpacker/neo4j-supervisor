@@ -98,6 +98,7 @@ supervisor.prototype._run = function(command, callback) {
   var neo = spawn(bin, args, {detached:true});
   var output = '';
   var error = '';
+  var self = this;
   neo.stdout.on('data', function(data) {
     output += data;
   });
@@ -106,7 +107,10 @@ supervisor.prototype._run = function(command, callback) {
   });
   neo.on('exit', function(code) {
     if (code) callback(new Error(error || output));
-    else callback(null, output);
+    else self.waitForAttach(function(err) {
+      if (err) callback(err);
+      else callback(null, output);
+    });
   });
 };
 
