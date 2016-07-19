@@ -435,6 +435,39 @@ describe('supervisor', function() {
         }
       ], done);
     }); 
+
+		it('should clean data from the database', function(done) {
+			async.waterfall([
+        function removeAuth(next) {
+          neo.config('dbms.security.auth_enabled', 'false', next);
+        },
+				function startServer(next) {
+					neo.start(next);
+				},
+				function createSeraph(output, next) {
+					neo.endpoint(function(err, ep) {
+						return next(err, seraph(ep));
+					});
+				},
+				function writeData(db, next) {
+					db.save({ thing: 'data' }, function(err, node) {
+						next(err, db, node);
+					});
+				},
+				function clean(db, node, next) {
+					neo.clean(function(err) {
+						next(err, db, node);
+					});
+				},
+				function checkData(db, node, next) {
+					db.read(node.id, function(err, node) {
+						assert(!!err);
+						assert(!node);
+						next();
+					});
+				}
+			], done);
+		});
   });
   //en3
 
@@ -450,7 +483,6 @@ describe('supervisor', function() {
 				},
 				function createSeraph(output, next) {
 					neo.endpoint(function(err, ep) {
-            console.log(ep);
 						return next(err, seraph(ep));
 					});
 				},
