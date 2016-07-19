@@ -98,7 +98,6 @@ supervisor.prototype._run = function(command, callback) {
   var neo = spawn(bin, args, {detached:true});
   var output = '';
   var error = '';
-  var self = this;
   neo.stdout.on('data', function(data) {
     output += data;
   });
@@ -107,10 +106,7 @@ supervisor.prototype._run = function(command, callback) {
   });
   neo.on('exit', function(code) {
     if (code) callback(new Error(error || output));
-    else self.waitForAttach(function(err) {
-      if (err) callback(err);
-      else callback(null, output);
-    });
+    else callback(null, output);
   });
 };
 
@@ -127,7 +123,7 @@ supervisor.prototype.attached = function(callback, cachedEndpoint) {
     if (e) return callback(e);
     http.request(ep.server + ep.endpoint + '/', function(res) {
       callback(null, true);
-    }).on('error', function() {
+    }).on('error', function(e) {
       callback(null, false);
     }).end();
   });
@@ -135,23 +131,34 @@ supervisor.prototype.attached = function(callback, cachedEndpoint) {
 
 supervisor.prototype.waitForAttach = function(callback) {
   var self = this;
-  this.endpoint(function(err, ep) {
     if (err) return callback(err);
     var firstRun = true;
+    var isUp;
     async.doUntil(function(callback) {
         setTimeout(function() {
           firstRun = false;
-          self.attached(callback, ep);
+          self.attached(function(e, up) {
+            if (e) return callback(e);
+            isUp = up;
+            callback();
+          }, ep);
         }, firstRun ? 0 : 500);
       }, 
-      function(isUp) { return isUp },
+      function() { return isUp },
       callback
     );
   });
 };
 
 supervisor.prototype.start = function(callback) {
-  this._run('start', callback);
+  var self = this;
+  this._run('start', function(err, output) {
+    if (err) return callback(err);
+    else self.waitForAttach(function(err) {
+      if (err) callback(err);
+      else callback(null, output);
+    });
+  });
 };
 supervisor.prototype.stop = function(callback) {
   this._run('stop', callback);
@@ -249,6 +256,14 @@ supervisor.prototype.config = function(key, value, callback) {
   });
 };
 
+supervisor.prototype.configGetWithDefault = function(key, def, callback) {
+  this.config(key, function(err, value) {
+    if (err && err.code != 'ENOKEY') return callback(err);
+    else if (err && err.code == 'ENOKEY') return callback(null, def);
+    else callback(null, value);
+  });
+};
+
 supervisor.prototype.clean = function(callback) {
 	var self = this, wasRunning;
 
@@ -260,6 +275,20 @@ supervisor.prototype.clean = function(callback) {
 		});
 	};
 
+  var getDataDir = function(callback) {
+    if (semver.gte(self.version, '3.0.0')) {
+      async.parallel({
+        activeDatabase: self.configGetWithDefault.bind(self, 'dbms.active_database', 'graph.db'),
+        dataDir: self.configGetWithDefault.bind(self, 'dbms.directories.data', 'data')
+      }, function(e, res) {
+        if (e) return callback(e);
+        callback(null, res.dataDir + '/databases/' + res.activeDatabase);
+      })
+    } else {
+      self.config('org.neo4j.server.database.location', callback);
+    }
+  }
+
 	async.waterfall([
 		this.running.bind(this),
 		function(running, next) {
@@ -267,7 +296,8 @@ supervisor.prototype.clean = function(callback) {
 			if (!running) return next();
 			self.stop(function(err) { next(err) });
 		},
-		this.config.bind(this, 'org.neo4j.server.database.location'),
+    getDataDir,
+		//this.config.bind(this, 'org.neo4j.server.database.location'),
 		cleanData,
 		function(next) {
 			if (!wasRunning) return next();
