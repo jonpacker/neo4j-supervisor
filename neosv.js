@@ -131,6 +131,7 @@ supervisor.prototype.attached = function(callback, cachedEndpoint) {
 
 supervisor.prototype.waitForAttach = function(callback) {
   var self = this;
+  this.endpoint(function(err, ep) {
     if (err) return callback(err);
     var firstRun = true;
     var isUp;
