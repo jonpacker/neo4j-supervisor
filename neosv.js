@@ -9,7 +9,7 @@ var rimraf = require('rimraf');
 var assert = require('assert');
 var semver = require('semver');
 var which = require('which');
-
+var http = require('http');
 
 //Run the given neo4j instance with the given command and return the output
 
@@ -115,6 +115,17 @@ supervisor.prototype.running = function(callback) {
     if (err && err.message.match(/not running/)) return callback(null, false);
     if (err) return callback(err);
     callback(null, !!/pid\s+\d+/.exec(status));
+  });
+};
+
+supervisor.prototype.attached = function(callback, cachedEndpoint) {
+  (cachedEndpoint ? function(c) { c(null, cachedEndpoint) } : this.endpoint)(function(e, ep) {
+    if (e) return callback(e);
+    http.request(ep.server + ep.endpoint + '/', function(res) {
+      callback(null, true);
+    }).on('error', function() {
+      callback(null, false);
+    }).end();
   });
 };
 
