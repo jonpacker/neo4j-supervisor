@@ -129,6 +129,23 @@ supervisor.prototype.attached = function(callback, cachedEndpoint) {
   });
 };
 
+supervisor.prototype.waitForAttach = function(callback) {
+  var self = this;
+  this.endpoint(function(err, ep) {
+    if (err) return callback(err);
+    var firstRun = true;
+    async.doUntil(function(callback) {
+        setTimeout(function() {
+          firstRun = false;
+          self.attached(callback, ep);
+        }, firstRun ? 0 : 500);
+      }, 
+      function(isUp) { return isUp },
+      callback
+    );
+  });
+};
+
 supervisor.prototype.start = function(callback) {
   this._run('start', callback);
 };
