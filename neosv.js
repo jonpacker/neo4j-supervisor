@@ -164,7 +164,13 @@ supervisor.prototype.stop = function(callback) {
   this._run('stop', callback);
 };
 supervisor.prototype.restart = function(callback) {
-  this._run('restart', callback);
+  this._run('restart', function(err, output) {
+    if (err) return callback(err);
+    else self.waitForAttach(function(err) {
+      if (err) callback(err);
+      else callback(null, output);
+    });
+  });
 };
 
 supervisor.prototype.pid = function(callback) {
