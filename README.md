@@ -44,6 +44,8 @@ specified**
 * **neo.attached(cb)** - check if the API endpoint is responding. there is a
   brief period on startup where `running` will return true and `attached` will
   return false.
+* **neo.waitForAttach(cb)** - wait until `neo.attached` returns true, then call
+  `cb`.
 * **neo.start(cb)** - start the server
 * **neo.stop(cb)** - stop the server
 * **neo.restart(cb)** - restart the server
