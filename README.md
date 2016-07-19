@@ -46,9 +46,11 @@ specified**
   return false.
 * **neo.waitForAttach(cb)** - wait until `neo.attached` returns true, then call
   `cb`.
-* **neo.start(cb)** - start the server
+* **neo.start(cb)** - start the server. will wait until api is available before
+  `cb` is called.
 * **neo.stop(cb)** - stop the server
-* **neo.restart(cb)** - restart the server
+* **neo.restart(cb)** - restart the server. will wait until api is available
+  before `cb` is called
 * **neo.config([key], [value], cb)** - either get all of the server's
   configuration values (as an obj), or a single key, or set a value, depending
   on which args are passed (key and value are optional).
