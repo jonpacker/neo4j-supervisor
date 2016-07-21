@@ -44,6 +44,7 @@ var addConfigCurries = function(configCurries) {
     });
 
 supervisor.prototype.host = function(newHost, callback) {
+  var self = this;
   if (semver.gte(this.version, '3.0.0')) {
     if (typeof newHost == 'function') {
       callback = newHost;
@@ -58,7 +59,7 @@ supervisor.prototype.host = function(newHost, callback) {
     } else {
       this.port(function(err, port) {
         if (err) return callback(err);
-        this.config('dbms.connector.http.address', [newHost, port].join(':'), callback);
+        self.config('dbms.connector.http.address', [newHost, port].join(':'), callback);
       });
     }
   } else {
@@ -67,6 +68,7 @@ supervisor.prototype.host = function(newHost, callback) {
 };
 
 supervisor.prototype.port = function(newPort, callback) {
+  var self = this;
   if (semver.gte(this.version, '3.0.0')) {
     if (typeof newPort == 'function') {
       callback = newPort;
@@ -81,7 +83,7 @@ supervisor.prototype.port = function(newPort, callback) {
     } else {
       this.host(function(err, host) {
         if (err) return callback(err);
-        this.config('dbms.connector.http.address', [host, newPort].join(':'), callback);
+        self.config('dbms.connector.http.address', [host, newPort].join(':'), callback);
       });
     }
   } else {
