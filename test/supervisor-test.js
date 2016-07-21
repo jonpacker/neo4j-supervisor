@@ -213,7 +213,7 @@ describe('supervisor', function() {
 			neo.endpoint(function(err, ep) {
 				assert(!err);
 				var parsedUrl = url.parse(ep.server);
-				assert.equal(parsedUrl.hostname, '127.0.0.1');
+				assert.equal(parsedUrl.hostname, 'localhost');
 				assert.equal(parsedUrl.port, settings[1]);
 				assert.equal(ep.endpoint, settings[2] || '/db/data');
 				done();

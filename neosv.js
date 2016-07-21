@@ -52,7 +52,7 @@ supervisor.prototype.host = function(newHost, callback) {
     }
     if (!newHost) {
       this.config('dbms.connector.http.address', function(err, addr) {
-        if (err && err.code == 'ENOKEY') return callback(null, '127.0.0.1');
+        if (err && err.code == 'ENOKEY') return callback(null, 'localhost');
         if (err) return callback(err);
         else callback(null, addr.split(':')[1])
       });
@@ -209,11 +209,11 @@ supervisor.prototype.endpoint = function(callback) {
 		if (err && err != 'ENOKEY') return callback(err);
     var addr, host, port;
     if (semver.gte(self.version, '3.0.0')) {
-      settings[0] = settings[0] || '127.0.0.1:7474';
+      settings[0] = settings[0] || 'localhost:7474';
       host = settings[0].split(':')[0];
       port = settings[0].split(':')[1];
     } else {
-      host = settings[0] || '127.0.0.1';
+      host = settings[0] || 'localhost';
       port = settings[1] || '7474';
     }
 		callback(null, {
