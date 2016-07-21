@@ -1,6 +1,6 @@
 {
   "name": "neo4j-supervisor",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "manage a neo4j server installation",
   "main": "neosv.js",
   "scripts": {
