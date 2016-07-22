@@ -54,7 +54,7 @@ supervisor.prototype.host = function(newHost, callback) {
       this.config('dbms.connector.http.address', function(err, addr) {
         if (err && err.code == 'ENOKEY') return callback(null, 'localhost');
         if (err) return callback(err);
-        else callback(null, addr.split(':')[1])
+        else callback(null, addr.split(':')[0])
       });
     } else {
       this.port(function(err, port) {
@@ -78,7 +78,7 @@ supervisor.prototype.port = function(newPort, callback) {
       this.config('dbms.connector.http.address', function(err, addr) {
         if (err && err.code == 'ENOKEY') return callback(null, '7474');
         if (err) return callback(err);
-        else callback(null, addr.split(':')[0])
+        else callback(null, addr.split(':')[1])
       });
     } else {
       this.host(function(err, host) {
