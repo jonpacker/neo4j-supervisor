@@ -138,19 +138,28 @@ supervisor.prototype.waitForAttach = function(callback) {
   this.endpoint(function(err, ep) {
     if (err) return callback(err);
     var firstRun = true;
-    var isUp;
+    var isUp, died;
     async.doUntil(function(callback) {
         setTimeout(function() {
           firstRun = false;
+          self.running(function(e, running) {
+              if (!running)
+                died = true;
+          }, ep);
           self.attached(function(e, up) {
             if (e) return callback(e);
             isUp = up;
             callback();
           }, ep);
         }, firstRun ? 0 : 500);
-      }, 
-      function() { return isUp },
-      callback
+      },
+      function() { return isUp || died },
+      function() {
+        if (died)
+          callback(new Error('neo4j is not running'));
+        else
+          callback();
+      }
     );
   });
 };
